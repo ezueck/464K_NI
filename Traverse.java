@@ -3,8 +3,12 @@ package XML_Parse;
 import org.jdom2.*;
 import java.util.List;
 import java.util.Collection;
+import java.util.UUID;
+import java.util.HashMap;
 
 public class Traverse {
+	
+	HashMap<String, Integer> idHash = new HashMap<String, Integer>();
 	
 	public static void reOrderAttributes(Element root) {
 		List<Element> children = root.getChildren();
@@ -51,31 +55,42 @@ public class Traverse {
 	
 	// postorder traversal of tree
 	private static void traverseAndChange(Element root, int numTabs) {
+		int numTabs1 = numTabs;
 		for(Element each : root.getChildren()) {
-			traverseAndChange(each, numTabs);
+			numTabs1 = getNumTabs(root.getContent(0));
+			traverseAndChange(each, numTabs1);
 		}
-		// Add a tabbed newline for the new children
-		root.addContent(newTabbedLine(numTabs));
+		int noChildren = 0;
+		if(root.getAttributes().size() == 0) {
+			noChildren = 1;
+		}
 		
-		List<Attribute> attr = root.getAttributes();
-		Element newAttr = new Element("Attributes");
-		root.addContent(newAttr);
-		numTabs = getNumTabs(root.getContent(0));
-		newAttr.addContent(newTabbedLine(numTabs));
-		newAttr.setNamespace(root.getNamespace());
-		int attrSize = attr.size();
-		for(int i = 0; i < attrSize; i++) {
-			Element subAttr = new Element(attr.get(i).getName());
-			newAttr.addContent(subAttr);
-			subAttr.addContent(attr.get(i).getValue());
-			subAttr.setNamespace(root.getNamespace());
-			//root.removeAttribute(attr.get(0)); // when uncommenting this, must change all attr.get(i)s to attr.get(0)
-			if(i != (attrSize - 1)) {
-				newAttr.addContent(newTabbedLine(numTabs));
+		if(noChildren == 0) {
+			
+			// Add a tabbed newline for the new children
+			root.addContent(newTabbedLine(numTabs1));
+			
+			List<Attribute> attr = root.getAttributes();
+			Element newAttr = new Element("Attributes");
+			root.addContent(newAttr);
+			numTabs1 = getNumTabs(root.getContent(0));
+			newAttr.addContent(newTabbedLine(numTabs1));
+			newAttr.setNamespace(root.getNamespace());
+			int attrSize = attr.size();
+			for(int i = 0; i < attrSize; i++) {
+				Element subAttr = new Element(attr.get(0).getName());
+				newAttr.addContent(subAttr);
+				subAttr.addContent(attr.get(0).getValue());
+				subAttr.setNamespace(root.getNamespace());
+				root.removeAttribute(attr.get(0)); // when uncommenting this, must change all attr.get(i)s to attr.get(0)
+				if(i != (attrSize - 1)) {
+					newAttr.addContent(newTabbedLine(numTabs1));
+				}
 			}
+			newAttr.addContent(newTabbedLine(numTabs1 - 1));
+			root.addContent(newTabbedLine(numTabs1 - 2));
+		
 		}
-		newAttr.addContent(newTabbedLine(numTabs - 1));
-		root.addContent(newTabbedLine(numTabs - 2));
 		
 	}
 	
