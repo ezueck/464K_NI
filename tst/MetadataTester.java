@@ -7,15 +7,17 @@ import java.util.HashMap;
 
 public class MetadataTester {
 
-    private HashMap<String, Integer> map;
+    private HashMap<String, String> map;
     private String fileName = "MetadataTester.txt";
 
     @Before
     public void makeMap(){
         map = new HashMap<>();
 
-        map.put("this", 5);
-        map.put("that", 6);
+        map.put("GUID1", "5");
+        map.put("GUID2", "6");
+        map.put("GUID3", "6");
+
     }
 
     @After
@@ -33,11 +35,11 @@ public class MetadataTester {
     public void testBuildMap(){
 
         Metadata.storeMap(fileName, map);
-        HashMap<String, Integer> builtMap = Metadata.readMap(fileName);
+        HashMap<String, String> builtMap = Metadata.readMap(fileName);
 
         for(String s : map.keySet()){
             assert(builtMap.containsKey(s));
-            assert(map.get(s) == builtMap.get(s));
+            assert(map.get(s).equals(builtMap.get(s)));
         }
 
     }

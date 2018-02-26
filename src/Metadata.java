@@ -9,7 +9,7 @@ public class Metadata {
      * @param fileName: string of the filename to be created
      * @param map: the map to be stored
      */
-    public static void storeMap(String fileName, HashMap<String, Integer> map) {
+    public static void storeMap(String fileName, HashMap<String, String> map) {
 
         PrintWriter pw = null;
 
@@ -37,9 +37,9 @@ public class Metadata {
      * Build a HashMap stored in the filename given by file
      * @param fileName: string of the filename with stored map
      */
-    public static HashMap<String, Integer> readMap(String fileName) {
+    public static HashMap<String, String> readMap(String fileName) {
 
-        HashMap<String, Integer> map = new HashMap<>();
+        HashMap<String, String> map = new HashMap<>();
 
         File file = new File(fileName);
         Scanner input;
@@ -52,7 +52,7 @@ public class Metadata {
                 String[] tokens = line.split("\\s");
 
                 String guid = tokens[0];
-                int id  = Integer.parseInt(tokens[1]);
+                String id  = tokens[1];
 
                 map.put(guid, id);
             }
