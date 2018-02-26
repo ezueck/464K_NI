@@ -8,8 +8,8 @@ import java.util.HashMap;
 
 public class Traverse {
 	
-	HashMap<String, Integer> idHash = new HashMap<String, Integer>();
-	
+	private static HashMap<String, Integer> idHash = new HashMap<String, Integer>();
+		
 	public static void reOrderAttributes(Element root) {
 		List<Element> children = root.getChildren();
 		Element VI = children.get(0);
@@ -56,10 +56,14 @@ public class Traverse {
 	// postorder traversal of tree
 	private static void traverseAndChange(Element root, int numTabs) {
 		int numTabs1 = numTabs;
+		if(root.getContent().size() != 0) {
+			root.removeContent(root.getContentSize() - 1);
+		}
 		for(Element each : root.getChildren()) {
 			numTabs1 = getNumTabs(root.getContent(0));
 			traverseAndChange(each, numTabs1);
 		}
+		numTabs1 = numTabs;
 		int noChildren = 0;
 		if(root.getAttributes().size() == 0) {
 			noChildren = 1;

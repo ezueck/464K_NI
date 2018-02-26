@@ -9,17 +9,20 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
 
 /* TO DO:
  * Fix tab spacing
- * Delete Attributes correctly after adding them as new elements
- * xmlns placing might be an issue? When ouputting xml, namespace goes first instead of last
  * Get Attributes to appear before other child elements
  */
 
 public class Main {
+	
+	public static HashMap<String, Integer> idHash = new HashMap<String, Integer>();
+	
 	public static void main(String[] args) {
 		String filename = new String("Function.gvi");
+		//idHash = new HashMap<String, Integer>();
 		Document doc = Parser.parseXML(filename);
 		Element root = doc.getRootElement();
 		Traverse.reOrderAttributes(root);
