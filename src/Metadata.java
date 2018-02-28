@@ -1,3 +1,5 @@
+package XML_Parse;
+
 import java.io.*;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -16,7 +18,7 @@ public class Metadata {
         try {
 
             File file = new File(fileName);
-            FileWriter fw = new FileWriter(file, true);
+            FileWriter fw = new FileWriter(file, false); // change to true if you want to append
             pw = new PrintWriter(fw);
 
             for(String e : map.keySet()){
@@ -52,8 +54,8 @@ public class Metadata {
                 String[] tokens = line.split("\\s");
 
                 String guid = tokens[0];
-                String id  = tokens[1];
-
+                String id = tokens[1];
+                
                 map.put(guid, id);
             }
         } catch(FileNotFoundException e){
