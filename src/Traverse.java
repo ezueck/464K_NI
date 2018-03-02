@@ -173,11 +173,12 @@ public class Traverse {
 	private static void checkID(List<Attribute> attr) {
 		String attrName = attr.get(0).getName();
 		String attrValue = attr.get(0).getValue();
-		if(attrName.equals("Id") || attrName.equals("AttachedTo")) {
+		if(attrName.equals("Id") || attrName.equals("AttachedTo") || attrName.equals("DiagramId")
+								 || attrName.equals("RightRegister")) {
 			if(attrValue.contains("max") || attrValue.contains("min")) {
 				return;
 			}
-			String GUID = checkHashMap(attrName);
+			String GUID = checkHashMap(attrValue);
 			if(GUID != null) { // returns GUID if value is already in HashMap
 				attr.get(0).setValue(GUID);
 			} else {
@@ -201,13 +202,20 @@ public class Traverse {
 						id = id + attrValue.charAt(j);
 					}
 					String GUID = checkHashMap(id);
+					int indexDelete = index + 2;
+					StringBuilder build = new StringBuilder(attrValue);
+					while(build.charAt(indexDelete) != ':') {
+						build.deleteCharAt(indexDelete);
+					}
 					if(GUID != null) {
-						attrValue = attrValue.replace(id, GUID);
+						build.insert(indexDelete, GUID);
+						attrValue = build.toString();
 						attr.get(0).setValue(attrValue);
 					} else {
 						GUID = UUID.randomUUID().toString();
-						idHash.put(GUID, attrValue);
-						attrValue.replace(id, GUID);
+						idHash.put(GUID, id);
+						build.insert(indexDelete, GUID);
+						attrValue = build.toString();
 						attr.get(0).setValue(attrValue);
 					}
 				}		
