@@ -9,8 +9,13 @@ import java.util.HashMap;
 public class Traverse {
 	
 	private static HashMap<String, String> idHash = new HashMap<String, String>();
-		
+	
+	/**
+	 * Starting from root node of XML, traverse the file, reorder the attributes, and map the IDs to GUIDs.
+	 * @param root:	The root element of the document
+	 */
 	public static void reOrderAttributes(Element root) {
+		removeChecksum(root);
 		List<Element> children = root.getChildren();
 		Element VI = children.get(0);
 		for(int i = 0; i < children.size(); i++) {
@@ -32,6 +37,20 @@ public class Traverse {
 		Metadata.storeMap("GUID_map.txt", idHash);
 	}
 	
+	/**
+	 * Simply changes the Checksum to 32 0s in order to avoid possible merge conflicts with the Checksum
+	 * @param e: element that contains Checksum as an attribute (should be SourceFile element)
+	 */
+	private static void removeChecksum(Element e) {
+		Attribute checksum = e.getAttribute("Checksum");
+		checksum.setValue("00000000000000000000000000000000");
+	}
+	
+	/**
+	 * Given a string, find the number of tabs in the string
+	 * @param str: Input string
+	 * @return The number of tab ("\t") characters
+	 */
 	private static int getNumTabs(Content str) {
 		String findString = "\t";
 		int lastIndex = 0;
@@ -46,6 +65,11 @@ public class Traverse {
 		return numTabs;
 	}
 	
+	/**
+	 * Creates a new tabbed line for placing a new element. 
+	 * @param numTabs: The number of tabs of the previous line
+	 * @return New line string with appropriate number of tabs
+	 */
 	private static String newTabbedLine(int numTabs) {
 		String newTabbedLine = "\n";
 		for(int i = 0; i < numTabs + 1; i ++) {
@@ -54,6 +78,11 @@ public class Traverse {
 		return newTabbedLine;
 	}
 	
+	/**
+	 * Gets the number of tabs from an element's parent. An element's child should always have 1 more tab than the parent
+	 * @param element: the child element, used to find the number of tabs from the parent
+	 * @return The number of tabs that the parent element contains
+	 */
 	private static int getParentTabs(Element element) {
 		Element parent = element.getParentElement();
 		Element parentOfParent = parent.getParentElement();
@@ -75,6 +104,11 @@ public class Traverse {
 		return numTabs;
 	}
 	
+	/**
+	 * Helper function for reOrderAttributes. Actually does the traversal (DFS) and reorders/changes IDs
+	 * @param root: Root element of the document
+	 * @param numTabs: Number of tabs of the previous line, to keep track
+	 */
 	private static void traverseAndChange(Element root, int numTabs) {
 		int numTabs1 = numTabs;
 		for(Element each : root.getChildren()) {
@@ -131,11 +165,16 @@ public class Traverse {
 		}		
 	}
 	
+	/**
+	 * Checks the HashMap for a GUID<-->ID mapping. If there is no mapping, generate a new GUID and create the mapping.
+	 * Also changes the ID in the XML to its corresponding GUID.
+	 * @param attr: List of attributes that may or may not contain an ID that needs to be changed
+	 */
 	private static void checkID(List<Attribute> attr) {
 		String attrName = attr.get(0).getName();
 		String attrValue = attr.get(0).getValue();
-		if(attrName.equals("Id")) {
-			if(attrName.contains("max") || attrName.contains("min")) {
+		if(attrName.equals("Id") || attrName.equals("AttachedTo")) {
+			if(attrValue.contains("max") || attrValue.contains("min")) {
 				return;
 			}
 			String GUID = checkHashMap(attrName);
@@ -147,8 +186,41 @@ public class Traverse {
 				attr.get(0).setValue(GUID);
 			}
 		}
+		if(attrName.equals("Joints")) {
+			int fromIndex = 0;
+			for(int i = 0; i < attrValue.length(); i++) {
+				int index = attrValue.indexOf("N(", fromIndex);
+				if(index == -1) {
+					break;
+				} else {
+					String id = new String();
+					for(int j = index + 2; j < attrValue.length(); j++){
+						if(attrValue.charAt(j) == ':') {
+							break;
+						}
+						id = id + attrValue.charAt(j);
+					}
+					String GUID = checkHashMap(id);
+					if(GUID != null) {
+						attrValue = attrValue.replace(id, GUID);
+						attr.get(0).setValue(attrValue);
+					} else {
+						GUID = UUID.randomUUID().toString();
+						idHash.put(GUID, attrValue);
+						attrValue.replace(id, GUID);
+						attr.get(0).setValue(attrValue);
+					}
+				}		
+				fromIndex = index + 1;
+			}
+		}
 	}
 	
+	/**
+	 * Helper function for checkID. Checks the HashMap for a valid GUID<-->ID mapping
+	 * @param value: The ID to be checked
+	 * @return Returns the respective GUID if the mapping exists, and null if there is no mapping.
+	 */
 	private static String checkHashMap(String value) {
 		for(HashMap.Entry<String, String> entry : idHash.entrySet()) {
 			String ID = entry.getValue();
