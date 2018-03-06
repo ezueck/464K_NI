@@ -23,10 +23,14 @@ public class LoadBetter {
 		Element root = doc.getRootElement();
 		justForInstantiation = root;
 		
-		createHash();
+		//revert structure to labview compatible
+		//load hash between GUID and IDs. Update if necesarry 
+		//change GUID to IDs in xml
 		BackToOriginal(root);
+		createHash();
 		
 		
+		//create xml file using the labview compatible structure 
 		try {
 			XMLOutputter XMLoutput = new XMLOutputter();
 			XMLoutput.output(doc, new FileWriter("testing.xml"));		
@@ -34,25 +38,13 @@ public class LoadBetter {
 		catch(IOException ioe){
 			System.out.println(ioe);
 		}
-		
 	}
 	
-	//scan table for all guid-id pairs
-	public static void createHash(){
-		idMap = Metadata.readMap("GUID_map.txt");
-	}
-	
-	//find highest id, look for id=
-	public static int HighestID(){
-		return 0;
-		
-	}
-
 	//change xml back to original structure for labview NXG
 	public static void BackToOriginal(Element root){
 		
 		List<Element> children = root.getChildren();
-		Element VI = children.get(0);
+		Element VI = justForInstantiation;
 		for(int i = 0; i < children.size(); i++) {
 			if(children.get(i).getName().equals("VirtualInstrument")) {
 				VI = children.get(i);
@@ -61,7 +53,7 @@ public class LoadBetter {
 		}
 
 		children = VI.getChildren();
-		Element blockDiagram = children.get(0);
+		Element blockDiagram = justForInstantiation;
 		
 		for(int i = 0; i < children.size(); i++) {
 			if(children.get(i).getName().equals("BlockDiagram")) {
@@ -69,22 +61,20 @@ public class LoadBetter {
 				break;
 			}
 		}
-		////we now have the block diagram	
+		////we now have the block diagram element (blockDiagram), so we can begin reverting to original form
 		revertAttributes(blockDiagram); 
 				
 	
 	}
 	
 	
-	//recursively take a node and move the attributes element into the node's attributes while also deleting that attributes element
+	//recursively take a node and move the "Attributes" element into the node's attributes while also deleting that "Attributes" element
 	public static void revertAttributes(Element node){
 		
 		List<Element> block = node.getChildren();
-		
-		
-		List<Element> children = block;
-		Element attr = justForInstantiation; //temporary value, doesnt mean anything right now
-		Element temp = justForInstantiation;//temp value just for instantiation, doesnt mean anything; use this variable to copy attribute elements
+		List<Element> children = justForInstantiation;//list of child elements of current node
+		Element attr = justForInstantiation; //attrbute element once found
+		Element temp = justForInstantiation;//temp variable to help with random stuff
 		Element parent = justForInstantiation; //parent of attribute element
 		boolean attrFound = false;
 		int attrnum = 0;
@@ -116,8 +106,26 @@ public class LoadBetter {
 			}
 			parent.removeContent(attr);
 			parent.removeContent(attrnum);
-		}
-			
+		}		
+	}
+	
+	//scan table for all guid-id pairs
+	public static void createHash(){
+		idMap = Metadata.readMap("GUID_map.txt");
+	}
+	
+	//change GUIDs to labview IDs
+	public static void hashChange(){
+		
+	}
+	
+	//find highest id so we know when to start incrementing for new elements
+	public static int HighestID(){
+		return 0;
+		
 	}
 
+
 }//end of file
+
+
