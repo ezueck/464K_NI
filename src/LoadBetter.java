@@ -72,7 +72,7 @@ public class LoadBetter {
 	public static void revertAttributes(Element node){
 		
 		List<Element> block = node.getChildren();
-		List<Element> children = justForInstantiation;//list of child elements of current node
+		List<Element> children = node.getChildren();//list of child elements of current node
 		Element attr = justForInstantiation; //attrbute element once found
 		Element temp = justForInstantiation;//temp variable to help with random stuff
 		Element parent = justForInstantiation; //parent of attribute element
