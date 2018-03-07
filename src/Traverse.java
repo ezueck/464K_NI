@@ -15,7 +15,7 @@ public class Traverse {
 	 * @param root:	The root element of the document
 	 */
 	public static void reOrderAttributes(Element root) {
-		removeChecksum(root);
+		removeChecksumTimestamp(root);
 		List<Element> children = root.getChildren();
 		Element VI = children.get(0);
 		for(int i = 0; i < children.size(); i++) {
@@ -25,7 +25,7 @@ public class Traverse {
 			}
 		}
 		children = VI.getChildren();
-		Element blockDiagram = children.get(0);
+		Element blockDiagram = children.get(0); // new Element() isn't allowed, so have to assign it to something. children.get(0) as a dummy element.
 		for(int i = 0; i < children.size(); i++) {
 			if(children.get(i).getName().equals("BlockDiagram")) {
 				blockDiagram = children.get(i);
@@ -41,9 +41,11 @@ public class Traverse {
 	 * Simply changes the Checksum to 32 0s in order to avoid possible merge conflicts with the Checksum
 	 * @param e: element that contains Checksum as an attribute (should be SourceFile element)
 	 */
-	private static void removeChecksum(Element e) {
+	private static void removeChecksumTimestamp(Element e) {
 		Attribute checksum = e.getAttribute("Checksum");
 		checksum.setValue("00000000000000000000000000000000");
+		Attribute timestamp = e.getAttribute("Timestamp");
+		timestamp.setValue("000000000000000");
 	}
 	
 	/**
@@ -175,7 +177,7 @@ public class Traverse {
 		String attrValue = attr.get(0).getValue();
 		if(attrName.equals("Id") || attrName.equals("AttachedTo") || attrName.equals("DiagramId")
 								 || attrName.equals("RightRegister")) {
-			if(attrValue.contains("max") || attrValue.contains("min")) {
+			if(attrValue.contains("max") || attrValue.contains("min") || attrValue.contains("Value")) {
 				return;
 			}
 			String GUID = checkHashMap(attrValue);

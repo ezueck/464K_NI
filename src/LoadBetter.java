@@ -16,18 +16,19 @@ public class LoadBetter {
 	//GUID-ID mapping, guid = key, id = key
 	private static HashMap<String, String> idMap = new HashMap<String, String>(); 
 	private static Element justForInstantiation;
+	private static int highestID;
 	
 	public static void main(String[] args) {
 		String filename = new String("XML_output1.xml");
 		Document doc = Parser.parseXML(filename);
 		Element root = doc.getRootElement();
 		justForInstantiation = root;
-		
+
+		//load hash between GUID and IDs.
 		//revert structure to labview compatible
-		//load hash between GUID and IDs. Update if necesarry 
 		//change GUID to IDs in xml
-		BackToOriginal(root);
 		createHash();
+		BackToOriginal(root);
 		
 		
 		//create xml file using the labview compatible structure 
@@ -62,8 +63,9 @@ public class LoadBetter {
 			}
 		}
 		////we now have the block diagram element (blockDiagram), so we can begin reverting to original form
-		revertAttributes(blockDiagram); 
-				
+		revertAttributes(blockDiagram);
+		getHighestID(root);
+		hashChange(blockDiagram);
 	
 	}
 	
@@ -106,6 +108,10 @@ public class LoadBetter {
 			}
 			parent.removeContent(attr);
 			parent.removeContent(attrnum);
+			
+			if(parent.getContent().size() == 1) {  // If we're left with a content size of 1, then it should be an empty element.
+				parent.removeContent(attrnum);	   // There's a text element leftover from the "save better" function.
+			}
 		}		
 	}
 	
@@ -115,15 +121,118 @@ public class LoadBetter {
 	}
 	
 	//change GUIDs to labview IDs
-	public static void hashChange(){
+	public static void hashChange(Element node){
 		
+		List<Element> children = node.getChildren();
+		for(Element each : node.getChildren()) {
+			hashChange(each);
+		}
+		
+		// get list of attributes. Start reverting IDs back to LabVIEW-friendly IDs.
+		List<Attribute> attributes = node.getAttributes();
+		
+		for(Attribute each : attributes) {
+			String attrName = each.getName();
+			String attrValue = each.getValue();
+			if(attrName.equals("Id") || attrName.equals("AttachedTo") || attrName.equals("DiagramId") || attrName.equals("RightRegister")) {
+				int labviewID = getIdValue(each);
+				if(labviewID > 0) {
+					String idString = Integer.toString(labviewID);
+					each.setValue(idString);
+				} else if(labviewID == -1) {
+					String idString = idMap.get(attrValue);
+					each.setValue(idString);
+				}
+			} else if(attrName.equals("Joints")) {
+				int fromIndex = 0;
+				for(int i = 0; i < attrValue.length(); i++) {
+					int index = attrValue.indexOf("N(", fromIndex);
+					if(index == -1) {
+						break;
+					} else {
+						String id = new String();
+						for(int j = index + 2; j < attrValue.length(); j++){
+							if(attrValue.charAt(j) == ':') {
+								break;
+							}
+							id = id + attrValue.charAt(j);
+						}
+						//String GUID = checkHashMap(id);
+						String idString = idMap.get(id);
+						int indexDelete = index + 2;
+						StringBuilder build = new StringBuilder(attrValue);
+						while(build.charAt(indexDelete) != ':') {
+							build.deleteCharAt(indexDelete);
+						}
+						if(idString != null) {
+							build.insert(indexDelete, idString);
+							attrValue = build.toString();
+							each.setValue(attrValue);
+						} else {
+							System.out.println("error in finding valid ID for wire joint");
+						}
+					}		
+					fromIndex = index + 1;
+				}
+			}
+		}
 	}
 	
 	//find highest id so we know when to start incrementing for new elements
-	public static int HighestID(){
-		return 0;
+	public static void getHighestID(Element node){
 		
+		List<Element> children = node.getChildren(); // list of children of current node
+		for(Element each : node.getChildren()) {
+			getHighestID(each);
+		}
+		
+		// get list of attributes, check for an ID
+		List<Attribute> attributes = node.getAttributes();
+		
+		for(Attribute each : attributes) {
+			if(each.getName().equals("Id")) {
+				int idValue = getIdValue(each);  // get value of the ID
+				if(idValue != -1) {	// if idValue is -1, then it's a non-numeric ID.
+					if(idValue > highestID) {
+						highestID = idValue;
+					}
+				}
+			}
+		}
 	}
+	
+	/**
+	 * Given an ID attribute, return the value of the ID as an int.
+	 * If the ID is determined to be a GUID, and it's not in the HashMap already, then add it to the HashMap.
+	 * @param attribute the ID to be parsed/looked up
+	 * @return the value of the ID, or -1 if the ID is non-numeric.
+	 */
+	public static int getIdValue(Attribute attribute) {
+		try {
+			int idValue = Integer.parseInt(attribute.getValue()); // try parsing the ID value as an integer
+			return idValue;
+		}
+		catch(NumberFormatException NFE) {  // if exception is thrown, then it is likely a GUID. Check map.
+			String ID = idMap.get(attribute.getValue());
+			if(ID != null) { // the ID exists in the map already
+				try {
+					int idValue = Integer.parseInt(ID);
+					return idValue;
+				}
+				catch(NumberFormatException NFE2) { // if a second exception is thrown, then it's a non-numeric ID that already exists in the map.
+					return -1;
+				}
+			} else {
+				if(attribute.getValue().length() == 36) { // 36 characters is the length of our GUIDs.
+					highestID = highestID + 1;			  // If we find an ID that is 36 characters long, and not in the HashMap,
+					idMap.put(attribute.getValue(), Integer.toString(highestID));  // then assume it's a new GUID from a newly added element. Add to HashMap.
+					return highestID;
+				}
+				return -2; // non-numeric ID, and we don't want it in the map.
+			}
+		}
+	}
+	
 
 
 }//end of file
