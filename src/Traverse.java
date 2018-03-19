@@ -16,6 +16,7 @@ public class Traverse {
 	 */
 	public static void reOrderAttributes(Element root) {
 		removeChecksumTimestamp(root);
+		idHash = Metadata.readMap("GUID_map.txt");
 		List<Element> children = root.getChildren();
 		Element VI = children.get(0);
 		for(int i = 0; i < children.size(); i++) {
