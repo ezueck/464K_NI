@@ -1,4 +1,3 @@
-package XML_Parse;
 
 import java.io.*;
 import java.util.HashMap;
@@ -39,7 +38,7 @@ public class Metadata {
      * Build a HashMap stored in the filename given by file
      * @param fileName: string of the filename with stored map
      */
-    public static HashMap<String, String> readMap(String fileName) {
+    public static HashMap<String, String> readMap(String fileName) throws FileNotFoundException {
 
         HashMap<String, String> map = new HashMap<>();
 
@@ -59,8 +58,7 @@ public class Metadata {
                 map.put(guid, id);
             }
         } catch(FileNotFoundException e){
-            e.printStackTrace();
-
+            throw e;
         }
 
         return map;

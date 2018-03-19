@@ -3,6 +3,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 
 public class MetadataTester {
@@ -32,7 +33,7 @@ public class MetadataTester {
     }
 
     @Test
-    public void testBuildMap(){
+    public void testBuildMap() {
 
         Metadata.storeMap(fileName, map);
         HashMap<String, String> builtMap = Metadata.readMap(fileName);
@@ -42,5 +43,13 @@ public class MetadataTester {
             assert(map.get(s).equals(builtMap.get(s)));
         }
 
+    }
+
+    @Test (expected = FileNotFoundException.class)
+    public void testFileNotFoundException() throws Exception{
+        File file = new File(fileName);
+        file.delete();
+
+        Metadata.readMap(fileName);
     }
 }
