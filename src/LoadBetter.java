@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -130,7 +131,11 @@ public class LoadBetter {
 	
 	//scan table for all guid-id pairs
 	public static void createHash(){
-		idMap = Metadata.readMap("GUID_map.txt");
+		try {
+			idMap = Metadata.readMap("GUID_map.txt");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	//change GUIDs to labview IDs

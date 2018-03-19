@@ -1,7 +1,9 @@
 package XML_Parse;
 
+import java.io.*;
 import org.jdom2.*;
 import java.util.List;
+import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.HashMap;
@@ -16,7 +18,13 @@ public class Traverse {
 	 */
 	public static void reOrderAttributes(Element root) {
 		removeChecksumTimestamp(root);
-		idHash = Metadata.readMap("GUID_map.txt");
+		
+		try {
+			idHash = Metadata.readMap("GUID_map.txt");
+		}
+		catch(FileNotFoundException fnfe) {
+			
+		}
 		List<Element> children = root.getChildren();
 		Element VI = children.get(0);
 		for(int i = 0; i < children.size(); i++) {
