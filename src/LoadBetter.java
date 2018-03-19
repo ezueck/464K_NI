@@ -4,6 +4,7 @@ import org.jdom2.*;
 import org.jdom2.output.XMLOutputter;
 
 import java.util.List;
+import java.util.Scanner;
 import java.util.UUID;
 import java.io.File;
 import java.io.FileWriter;
@@ -19,8 +20,20 @@ public class LoadBetter {
 	private static int highestID;
 	
 	public static void main(String[] args) {
-		String filename = new String("XML_output1.xml");
-		Document doc = Parser.parseXML(filename);
+		
+	    // Scanner for user input
+	    Scanner user = new Scanner( System.in ); 
+	    String  inputFileName, outputFileName;
+
+	    // prepare the input file
+	    System.out.print("Input .xml File Name: ");
+	    inputFileName = user.nextLine().trim();     
+
+	    // prepare the output file
+	    System.out.print("Output .gvi File Name: ");
+	    outputFileName = user.nextLine().trim();
+	    
+	    Document doc = Parser.parseXML(inputFileName);
 		Element root = doc.getRootElement();
 		justForInstantiation = root;
 
@@ -34,7 +47,7 @@ public class LoadBetter {
 		//create xml file using the labview compatible structure 
 		try {
 			XMLOutputter XMLoutput = new XMLOutputter();
-			XMLoutput.output(doc, new FileWriter("testing.xml"));		
+			XMLoutput.output(doc, new FileWriter(outputFileName));		
 		}
 		catch(IOException ioe){
 			System.out.println(ioe);
