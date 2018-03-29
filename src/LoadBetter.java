@@ -77,12 +77,37 @@ public class LoadBetter {
 			}
 		}
 		////we now have the block diagram element (blockDiagram), so we can begin reverting to original form
+		revertTerminals(blockDiagram);
 		revertAttributes(blockDiagram);
 		getHighestID(root);
 		hashChange(blockDiagram);
 	
 	}
 	
+	// Revert terminals so that all info is back onto 1 line, instead of split up into multiple lines.
+	public static void revertTerminals(Element node) {
+		for(Element each : node.getChildren()) {
+			revertTerminals(each);
+		}
+		
+		if(node.getName().equals("Terminals")) {
+			StringBuilder revertTerminalsBuilder = new StringBuilder();
+			int numTerminals = node.getContentSize() / 2;
+			int commaCount = 0;
+			while(!node.getContent().isEmpty()) {
+				if(node.getContent(0).getCType() == Content.CType.Element) {
+					revertTerminalsBuilder.append(node.getContent(0).getValue());
+					commaCount++;
+					if(commaCount < numTerminals) {
+						revertTerminalsBuilder.append(", ");
+					}
+				}
+				node.removeContent(0);
+			}
+			String revertTerminals = revertTerminalsBuilder.toString();
+			node.addContent(revertTerminals);
+		}
+	}
 	
 	//recursively take a node and move the "Attributes" element into the node's attributes while also deleting that "Attributes" element
 	public static void revertAttributes(Element node){
@@ -152,7 +177,8 @@ public class LoadBetter {
 		for(Attribute each : attributes) {
 			String attrName = each.getName();
 			String attrValue = each.getValue();
-			if(attrName.equals("Id") || attrName.equals("AttachedTo") || attrName.equals("DiagramId") || attrName.equals("RightRegister")) {
+			if(attrName.equals("Id") || attrName.equals("AttachedTo") || attrName.equals("DiagramId") || attrName.equals("RightRegister")
+									 || attrName.equals("Label")) {
 				int labviewID = getIdValue(each);
 				if(labviewID > 0) {
 					String idString = Integer.toString(labviewID);
@@ -175,7 +201,6 @@ public class LoadBetter {
 							}
 							id = id + attrValue.charAt(j);
 						}
-						//String GUID = checkHashMap(id);
 						String idString = idMap.get(id);
 						int indexDelete = index + 2;
 						StringBuilder build = new StringBuilder(attrValue);
@@ -192,6 +217,30 @@ public class LoadBetter {
 					}		
 					fromIndex = index + 1;
 				}
+			} else if(attrName.equals("Terminals")) {
+				StringBuilder revertTerminalsBuild = new StringBuilder(); // used to build new Terminals attribute with GUIDs
+				String[] tokens = attrValue.split(", ");
+				
+				for(int i = 0; i < tokens.length; i++) {
+					String[] lookForEquals = tokens[i].split("="); // need to check both sides of "="
+					for(int j = 0; j < lookForEquals.length; j++) {
+						String GUID = lookForEquals[j];
+						String stringID = idMap.get(GUID);
+						if(stringID != null) {
+							lookForEquals[j] = stringID;  // change GUID to ID, and use the StringBuilder to implement it back into XML.
+						}
+					}
+					if(lookForEquals.length == 2) {
+						revertTerminalsBuild.append(lookForEquals[0] + "=" + lookForEquals[1]);
+					} else if(lookForEquals.length == 1) {
+						revertTerminalsBuild.append(lookForEquals[0]);
+					}
+					if(i < tokens.length - 1) {
+						revertTerminalsBuild.append(", ");
+					}
+				}
+				String revertTerminals = revertTerminalsBuild.toString();
+				each.setValue(revertTerminals); // replace old attribute, now including the GUIDs
 			}
 		}
 	}

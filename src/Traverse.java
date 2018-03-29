@@ -43,6 +43,7 @@ public class Traverse {
 		}
 		int numTabs = getNumTabs(blockDiagram.getContent(0));
 		traverseAndChange(blockDiagram, numTabs);
+		changeTerminals(blockDiagram);
 		Metadata.storeMap("GUID_map.txt", idHash);
 	}
 	
@@ -133,7 +134,6 @@ public class Traverse {
 		}
 		
 		if(!noAttributes) {
-			int index = 0;
 			
 			// Add a tabbed newline for the new children
 			int numTabsTest = getParentTabs(root);
@@ -185,18 +185,16 @@ public class Traverse {
 		String attrName = attr.get(0).getName();
 		String attrValue = attr.get(0).getValue();
 		if(attrName.equals("Id") || attrName.equals("AttachedTo") || attrName.equals("DiagramId")
-								 || attrName.equals("RightRegister")) {
+								 || attrName.equals("RightRegister") || attrName.equals("Label")) {
 			if(attrValue.contains("max") || attrValue.contains("min") || attrValue.contains("Value")) {
 				return;
 			}
 			String GUID = checkHashMap(attrValue);
-			if(GUID != null) { // returns GUID if value is already in HashMap
-				attr.get(0).setValue(GUID);
-			} else {
+			if(GUID == null) { // returns GUID if value is already in HashMap
 				GUID = UUID.randomUUID().toString();
 				idHash.put(GUID, attrValue);
-				attr.get(0).setValue(GUID);
 			}
+			attr.get(0).setValue(GUID);
 		}
 		if(attrName.equals("Joints")) {
 			int fromIndex = 0;
@@ -218,20 +216,81 @@ public class Traverse {
 					while(build.charAt(indexDelete) != ':') {
 						build.deleteCharAt(indexDelete);
 					}
-					if(GUID != null) {
-						build.insert(indexDelete, GUID);
-						attrValue = build.toString();
-						attr.get(0).setValue(attrValue);
-					} else {
+					if(GUID == null) {
 						GUID = UUID.randomUUID().toString();
 						idHash.put(GUID, id);
+					}
 						build.insert(indexDelete, GUID);
 						attrValue = build.toString();
 						attr.get(0).setValue(attrValue);
-					}
 				}		
 				fromIndex = index + 1;
 			}
+		}
+		if(attrName.equals("Terminals")) {
+			StringBuilder newTerminalsBuild = new StringBuilder(); // used to build new Terminals attribute with GUIDs
+			String[] tokens = attrValue.split(", ");
+			
+			for(int i = 0; i < tokens.length; i++) {
+				String[] lookForEquals = tokens[i].split("="); // need to check both sides of "="
+				for(int j = 0; j < lookForEquals.length; j++) {
+					String stringID = lookForEquals[j];
+					boolean validID = false;
+					try {
+						Integer.parseInt(stringID);
+						validID = true;
+					}
+					catch(NumberFormatException e) {						
+					}
+					if(validID) {
+						String GUID = checkHashMap(stringID);
+						if(GUID == null) {
+							GUID = UUID.randomUUID().toString();
+							idHash.put(GUID, stringID);
+						}
+						lookForEquals[j] = GUID;  // change ID to GUID, and use the StringBuilder to implement it back into XML.
+					}
+				}
+				if(lookForEquals.length == 2) {
+					newTerminalsBuild.append(lookForEquals[0] + "=" + lookForEquals[1]);
+				} else if(lookForEquals.length == 1) {
+					newTerminalsBuild.append(lookForEquals[0]);
+				}
+				if(i < tokens.length - 1) {
+					newTerminalsBuild.append(", ");
+				}
+			}
+			String newTerminals = newTerminalsBuild.toString();
+			attr.get(0).setValue(newTerminals); // replace old attribute, now including the GUIDs
+		}
+	}
+	
+	/**
+	 * Called after the rest of the xml has been restructured.
+	 * Changes Terminals to be Git-compatible; separating information onto separate lines to prevent merge conflicts.
+	 * @param node: The Terminals to restructure
+	 */
+	private static void changeTerminals(Element node) {
+		for(Element each : node.getChildren()) {
+			changeTerminals(each);
+		}
+		
+		if(node.getName().equals("Terminals")) {
+			int numTerminalTabs = getParentTabs(node) + 2;
+			String newLine = newTabbedLine(numTerminalTabs - 1); // -1 because newTabbedLine adds an extra tab? don't want to mess with it
+			
+			String terminalValue = node.getValue();
+			String[] tokens = terminalValue.split(", ");
+			node.removeContent(0);
+			for(int i = 0; i < tokens.length; i++) {
+				node.addContent(newLine);
+				Element Terminal = new Element("Terminal" + i);
+				Terminal.addContent(tokens[i]);
+				Terminal.setNamespace(node.getNamespace());
+				node.addContent(Terminal);
+			}
+			newLine = newTabbedLine(numTerminalTabs - 2);
+			node.addContent(newLine);
 		}
 	}
 	
