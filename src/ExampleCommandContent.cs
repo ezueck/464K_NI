@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using NationalInstruments;
 using NationalInstruments.Composition;
 using NationalInstruments.Controls.Shell;
@@ -42,7 +43,13 @@ namespace ExamplePlugins.ExampleCommandPaneContent
         /// </summary>
         public static void OnLoadBetter(ICommandParameter parameter, ICompositionHost host, DocumentEditSite site)
         {
-            var path = parameter.Parameter as string;
+        	OpenFileDialog loadFile = new OpenFileDialog();
+        	loadFile.InitialDirectory = "c:\\";
+        	loadFile.Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*";
+        	if(loadFile.ShowDialog() != DialogResult.OK)
+        		return;
+            var path = loadFile.FileName;
+            
             Process loadBetter = new Process();
             loadBetter.StartInfo.UseShellExecute = false;
             loadBetter.StartInfo.CreateNoWindow = true;
