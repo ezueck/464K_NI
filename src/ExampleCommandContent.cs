@@ -55,7 +55,7 @@ namespace ExamplePlugins.ExampleCommandPaneContent
             loadBetter.StartInfo.CreateNoWindow = true;
             loadBetter.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
             loadBetter.StartInfo.Arguments = path;
-            loadBetter.StartInfo.FileName = LoadBetter.jar";
+            loadBetter.StartInfo.FileName = "LoadBetter.jar";
             loadBetter.Start();
             loadBetter.WaidForExit();
             /// NIMessageBox.Show(path);
