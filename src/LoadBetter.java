@@ -77,7 +77,7 @@ public class LoadBetter {
 			}
 		}
 		////we now have the block diagram element (blockDiagram), so we can begin reverting to original form
-		revertTerminals(blockDiagram);
+		revertTerminalsAndWires(blockDiagram);
 		revertAttributes(blockDiagram);
 		getHighestID(root);
 		hashChange(blockDiagram);
@@ -85,9 +85,9 @@ public class LoadBetter {
 	}
 	
 	// Revert terminals so that all info is back onto 1 line, instead of split up into multiple lines.
-	public static void revertTerminals(Element node) {
+	public static void revertTerminalsAndWires(Element node) {
 		for(Element each : node.getChildren()) {
-			revertTerminals(each);
+			revertTerminalsAndWires(each);
 		}
 		
 		if(node.getName().equals("Terminals")) {
@@ -105,6 +105,22 @@ public class LoadBetter {
 				node.removeContent(0);
 			}
 			String revertTerminals = revertTerminalsBuilder.toString();
+			node.addContent(revertTerminals);
+		} else if(node.getName().equals("Joints")) {
+			StringBuilder revertJointsBuilder = new StringBuilder();
+//			int numJoints = node.getContentSize() / 2;
+//			int parenthesisCount = 0;
+			while(!node.getContent().isEmpty()) {
+				if(node.getContent(0).getCType() == Content.CType.Element) {
+					revertJointsBuilder.append(node.getContent(0).getValue());
+//					parenthesisCount++;
+//					if(parenthesisCount < numJoints) {
+						revertJointsBuilder.append(")");
+//					}
+				}
+				node.removeContent(0);
+			}
+			String revertTerminals = revertJointsBuilder.toString();
 			node.addContent(revertTerminals);
 		}
 	}

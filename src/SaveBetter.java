@@ -32,7 +32,7 @@ public class SaveBetter {
 		
 		Document doc = Parser.parseXML(inputFileName);
 		Element root = doc.getRootElement();
-		Traverse.reOrderAttributes(root);
+		reOrderAttributes(root);
 		
 		try {
 			XMLOutputter XMLoutput = new XMLOutputter();
@@ -76,7 +76,7 @@ public class SaveBetter {
 		}
 		int numTabs = getNumTabs(blockDiagram.getContent(0));
 		traverseAndChange(blockDiagram, numTabs);
-		changeTerminals(blockDiagram);
+		changeTerminalsAndWires(blockDiagram);
 		Metadata.storeMap("GUID_map.txt", idHash);
 	}
 	
@@ -303,9 +303,9 @@ public class SaveBetter {
 	 * Changes Terminals to be Git-compatible; separating information onto separate lines to prevent merge conflicts.
 	 * @param node: The Terminals to restructure
 	 */
-	private static void changeTerminals(Element node) {
+	private static void changeTerminalsAndWires(Element node) {
 		for(Element each : node.getChildren()) {
-			changeTerminals(each);
+			changeTerminalsAndWires(each);
 		}
 		
 		if(node.getName().equals("Terminals")) {
@@ -323,6 +323,22 @@ public class SaveBetter {
 				node.addContent(Terminal);
 			}
 			newLine = newTabbedLine(numTerminalTabs - 2);
+			node.addContent(newLine);
+		} else if(node.getName().equals("Joints")) {
+			int numJointsTabs = getParentTabs(node) + 2;
+			String newLine = newTabbedLine(numJointsTabs - 1);
+			
+			String jointsValue = node.getValue();
+			String[] tokens = jointsValue.split("\\)");
+			node.removeContent(0);
+			for(int i = 0; i < tokens.length; i++) {
+				node.addContent(newLine);
+				Element Joint = new Element("Joint" + i);
+				Joint.addContent(tokens[i]);
+				Joint.setNamespace(node.getNamespace());
+				node.addContent(Joint);
+			}
+			newLine = newTabbedLine(numJointsTabs - 2);
 			node.addContent(newLine);
 		}
 	}
